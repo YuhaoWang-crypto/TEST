@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+  <meta charset="utf-8" />
+  <title>RF Diffusion Demo</title>
+
+  <!-- JupyterLab 样式（必要） -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/@jupyterlab/theme-light-extension@4.0.0/style/index.css"
+  />
+
+  <!-- 自定义 CSS —— 你可以在这里改配色 / 布局 -->
+  <style>
+    body { font-family: "Inter", sans-serif; margin: 0; background:#f8f9fa; }
+    #banner { background:#003057; color:#fff; padding:1.2rem 2rem; }
+    #banner h1 { margin:0; font-size:1.8rem; }
+    .cell { border-radius:0.75rem; margin:1rem 0; box-shadow:0 2px 4px rgba(0,0,0,.08);}
+    thebe-cell { overflow:hidden; }
+    button.thebe-launch-button { background:#007bff; color:#fff; border:none; padding:0.5rem 1rem;
+       border-radius:0.5rem; cursor:pointer; }
+    button.thebe-launch-button:hover { background:#0056b3; }
+  </style>
+</head>
+
+<body>
+  <!-- 顶部标题栏 -->
+  <div id="banner"><h1>RF Diffusion – 交互式示例</h1></div>
+
+  <!-- Notebook 渲染区。nbconvert 会把 cell 注入这里 -->
+  <div id="notebook-container"></div>
+
+  <!-- Thebe.js -->
+  <script src="https://unpkg.com/thebe@latest/dist/index.min.js"></script>
+
+  <script>
+    /* ① 加载 notebook HTML（由 nbconvert 预编译）*/
+    fetch('diffusion.html')                      // 参见 2.2
+      .then(r => r.text())
+      .then(html => { document.getElementById('notebook-container').innerHTML = html; })
+
+      /* ② 激活 Thebe：连接 Binder、把每个 <pre><code data-executable> 转成可运行 cell */
+      .then(() => thebe
+        .bootstrap({
+          requestKernel: true,
+          binderOptions: {
+            repo: 'sokrypton/ColabDesign',    // Binder 镜像指向哪个仓库（含依赖的 environment.yml）
+            ref: 'v1.1.1',                    // 指定 tag/branch/commit，确保环境一致
+            binderUrl: 'https://mybinder.org',// 默认即可
+          },
+          kernelOptions: { name: 'python3' }
+        })
+      );
+  </script>
+</body>
+</html>
