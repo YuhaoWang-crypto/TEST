@@ -1,67 +1,66 @@
 <!DOCTYPE html>
-<html lang="zh-cn">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <title>RF Diffusion Demo</title>
 
-  <!-- JupyterLab 样式（必要） -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/@jupyterlab/theme-light-extension@4.0.0/style/index.css"
-  />
+  <!-- ① JupyterLab Light 主题 CSS（代码框样式）-->
+  <link rel="stylesheet"
+        href="https://unpkg.com/@jupyterlab/theme-light-extension@4.0.0/style/index.css">
 
-  
-  <!-- ① ipywidgets 依赖 -->
+  <!-- ② Font-Awesome（ipywidgets 按钮用到）-->
   <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
-        crossorigin="anonymous" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-  <!-- ② 小部件管理器 (ES module) -->
-  <script type="module"
-          src="https://unpkg.com/@jupyter-widgets/html-manager@latest/dist/esm/index.js"></script>
+        crossorigin="anonymous">
 
-
-  <!-- 自定义 CSS —— 你可以在这里改配色 / 布局 -->
+  <!-- ③ 可选：你的自定义配色 -->
   <style>
-    body { font-family: "Inter", sans-serif; margin: 0; background:#f8f9fa; }
-    #banner { background:#003057; color:#fff; padding:1.2rem 2rem; }
-    #banner h1 { margin:0; font-size:1.8rem; }
-    .cell { border-radius:0.75rem; margin:1rem 0; box-shadow:0 2px 4px rgba(0,0,0,.08);}
-    thebe-cell { overflow:hidden; }
-    button.thebe-launch-button { background:#007bff; color:#fff; border:none; padding:0.5rem 1rem;
-       border-radius:0.5rem; cursor:pointer; }
-    button.thebe-launch-button:hover { background:#0056b3; }
+    body{margin:0;font-family:Inter,Arial,Helvetica,sans-serif;background:#f8f9fa}
+    #banner{background:#003057;color:#fff;padding:1rem 2rem}
+    #banner h1{margin:0;font-size:1.5rem}
   </style>
 </head>
 
 <body>
-  <!-- 顶部标题栏 -->
-  <div id="banner"><h1>RF Diffusion – 交互式示例</h1></div>
+  <!-- 顶部横幅 -->
+  <div id="banner"><h1>RFdiffusion v1.1.1 — Interactive Notebook</h1></div>
 
-  <!-- Notebook 渲染区。nbconvert 会把 cell 注入这里 -->
-  <div id="notebook-container"></div>
+  <!-- Notebook HTML 会插到这里 -->
+  <div id="notebook-container" style="padding:1rem"></div>
 
-  <!-- Thebe.js -->
+  <!-- ④ Thebe 本体 -->
   <script src="https://unpkg.com/thebe@latest/dist/index.min.js"></script>
+  <!-- 需要先加载 require.js；Thebe 会自己找得到 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+  <!-- Widgets HTML manager（渲染 ipywidgets）-->
+  <script type="module"
+          src="https://unpkg.com/@jupyter-widgets/html-manager@latest/dist/esm/index.js"></script>
 
   <script>
-    /* ① 加载 notebook HTML（由 nbconvert 预编译）*/
-    fetch('diffusion.html')                      // 参见 2.2
+    /* ===== 1. 把 nbconvert 生成的 diffusion.html 塞进页面 ===== */
+    fetch('diffusion.html')
       .then(r => r.text())
-      .then(html => { document.getElementById('notebook-container').innerHTML = html; })
+      .then(html => {
+        const box = document.getElementById('notebook-container');
+        box.innerHTML = html;
 
-      /* ② 激活 Thebe：连接 Binder、把每个 <pre><code data-executable> 转成可运行 cell */
-      .then(() => thebe
-        .bootstrap({
+        /* ===== 2. 给每个代码块加 data-executable，让 Thebe 能识别 ===== */
+        // lab template 下，代码块外层 class 是 "jp-CodeCell"
+        box.querySelectorAll('.jp-CodeCell pre').forEach(el => {
+          el.setAttribute('data-executable', 'true');
+        });
+
+        /* ===== 3. 启动 Thebe（连接 Binder）===== */
+        thebe.bootstrap({
           requestKernel: true,
           binderOptions: {
-            repo: 'sokrypton/ColabDesign',    // Binder 镜像指向哪个仓库（含依赖的 environment.yml）
-            ref: 'v1.1.1',                    // 指定 tag/branch/commit，确保环境一致
-            binderUrl: 'https://mybinder.org',// 默认即可
+            repo: 'sokrypton/ColabDesign',   // 这里写含依赖的仓库
+            ref: 'v1.1.1',                   // 指定 tag / commit
+            binderUrl: 'https://mybinder.org'
           },
           kernelOptions: { name: 'python3' }
-        })
-      );
+        });
+      });
   </script>
 </body>
 </html>
