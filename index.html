@@ -10,6 +10,17 @@
     href="https://unpkg.com/@jupyterlab/theme-light-extension@4.0.0/style/index.css"
   />
 
+  
+  <!-- ① ipywidgets 依赖 -->
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+        crossorigin="anonymous" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+  <!-- ② 小部件管理器 (ES module) -->
+  <script type="module"
+          src="https://unpkg.com/@jupyter-widgets/html-manager@latest/dist/esm/index.js"></script>
+
+
   <!-- 自定义 CSS —— 你可以在这里改配色 / 布局 -->
   <style>
     body { font-family: "Inter", sans-serif; margin: 0; background:#f8f9fa; }

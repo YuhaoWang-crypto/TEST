@@ -7515,7 +7515,8 @@ a.anchor-link {
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h1 id="RFdiffusion-v1.1.1"><strong>RFdiffusion v1.1.1</strong><a class="anchor-link" href="#RFdiffusion-v1.1.1">¶</a></h1><p>RFdiffusion is a method for structure generation, with or without conditional information (a motif, target etc). It can perform a whole range of protein design challenges as we have outlined in the RFdiffusion <a href="https://www.biorxiv.org/content/10.1101/2022.12.09.519842v2">manuscript</a>.</p>
 <p>For <strong>instructions</strong>, see end of Notebook.</p>
 <p><strong><font color="red">NOTE:</font></strong>  This is tagged v1.1.1 of the notebook, this notebook may break in the future when colab updates. For latest version see <a href="https://colab.research.google.com/github/sokrypton/ColabDesign/blob/main/rf/examples/diffusion.ipynb">main</a> branch.</p>
@@ -7529,18 +7530,602 @@ a.anchor-link {
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs jp-mod-noInput">
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs jp-mod-noInput">
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs jp-mod-noInput">
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs jp-mod-noInput">
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs jp-mod-noInput">
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs jp-mod-noInput">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-python"><pre><span></span><span class="c1">#@title setup **RFdiffusion** (~3min)</span>
+<span class="o">%%</span><span class="n">time</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span><span class="o">,</span><span class="w"> </span><span class="nn">time</span><span class="o">,</span><span class="w"> </span><span class="nn">signal</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span><span class="o">,</span><span class="w"> </span><span class="nn">random</span><span class="o">,</span><span class="w"> </span><span class="nn">string</span><span class="o">,</span><span class="w"> </span><span class="nn">re</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="s2">"params"</span><span class="p">):</span>
+  <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"apt-get install aria2"</span><span class="p">)</span>
+  <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"mkdir params"</span><span class="p">)</span>
+  <span class="c1"># send param download into background</span>
+  <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"(</span><span class="se">\</span>
+<span class="s2">  aria2c -q -x 16 https://files.ipd.uw.edu/krypton/schedules.zip; </span><span class="se">\</span>
+<span class="s2">  aria2c -q -x 16 http://files.ipd.uw.edu/pub/RFdiffusion/6f5902ac237024bdd0c176cb93063dc4/Base_ckpt.pt; </span><span class="se">\</span>
+<span class="s2">  aria2c -q -x 16 http://files.ipd.uw.edu/pub/RFdiffusion/e29311f6f1bf1af907f9ef9f44b8328b/Complex_base_ckpt.pt; </span><span class="se">\</span>
+<span class="s2">  aria2c -q -x 16 https://storage.googleapis.com/alphafold/alphafold_params_2022-12-06.tar; </span><span class="se">\</span>
+<span class="s2">  tar -xf alphafold_params_2022-12-06.tar -C params; </span><span class="se">\</span>
+<span class="s2">  touch params/done.txt) &amp;"</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="s2">"RFdiffusion"</span><span class="p">):</span>
+  <span class="nb">print</span><span class="p">(</span><span class="s2">"installing RFdiffusion..."</span><span class="p">)</span>
+  <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"git clone https://github.com/sokrypton/RFdiffusion.git"</span><span class="p">)</span>
+  <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"pip install jedi omegaconf hydra-core icecream pyrsistent pynvml decorator"</span><span class="p">)</span>
+  <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"pip install git+https://github.com/NVIDIA/dllogger#egg=dllogger"</span><span class="p">)</span>
+  <span class="c1"># 17Mar2024: adding --no-dependencies to avoid installing nvidia-cuda-* dependencies</span>
+  <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"pip install --no-dependencies dgl==2.0.0 -f https://data.dgl.ai/wheels/cu121/repo.html"</span><span class="p">)</span>
+  <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"pip install --no-dependencies e3nn==0.5.5 opt_einsum_fx"</span><span class="p">)</span>
+  <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"cd RFdiffusion/env/SE3Transformer; pip install ."</span><span class="p">)</span>
+  <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"wget -qnc https://files.ipd.uw.edu/krypton/ananas"</span><span class="p">)</span>
+  <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"chmod +x ananas"</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="s2">"colabdesign"</span><span class="p">):</span>
+  <span class="nb">print</span><span class="p">(</span><span class="s2">"installing ColabDesign..."</span><span class="p">)</span>
+  <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"pip -q install git+https://github.com/sokrypton/ColabDesign.git@v1.1.1"</span><span class="p">)</span>
+  <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"ln -s /usr/local/lib/python3.*/dist-packages/colabdesign colabdesign"</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="s2">"RFdiffusion/models"</span><span class="p">):</span>
+  <span class="nb">print</span><span class="p">(</span><span class="s2">"downloading RFdiffusion params..."</span><span class="p">)</span>
+  <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"mkdir RFdiffusion/models"</span><span class="p">)</span>
+  <span class="n">models</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"Base_ckpt.pt"</span><span class="p">,</span><span class="s2">"Complex_base_ckpt.pt"</span><span class="p">]</span>
+  <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">models</span><span class="p">:</span>
+    <span class="k">while</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">m</span><span class="si">}</span><span class="s2">.aria2"</span><span class="p">):</span>
+      <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+  <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s2">"mv </span><span class="si">{</span><span class="s1">' '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">models</span><span class="p">)</span><span class="si">}</span><span class="s2"> RFdiffusion/models"</span><span class="p">)</span>
+  <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">"unzip schedules.zip; rm schedules.zip"</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="s1">'RFdiffusion'</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="p">:</span>
+  <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">"DGLBACKEND"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"pytorch"</span>
+  <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">'RFdiffusion'</span><span class="p">)</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">google.colab</span><span class="w"> </span><span class="kn">import</span> <span class="n">files</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">display</span><span class="p">,</span> <span class="n">HTML</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">ipywidgets</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">widgets</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">py3Dmol</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">inference.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_pdb</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">colabdesign.rf.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_ca</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">colabdesign.rf.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">fix_contigs</span><span class="p">,</span> <span class="n">fix_partial_contigs</span><span class="p">,</span> <span class="n">fix_pdb</span><span class="p">,</span> <span class="n">sym_it</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">colabdesign.shared.protein</span><span class="w"> </span><span class="kn">import</span> <span class="n">pdb_to_string</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">colabdesign.shared.plot</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_pseudo_3D</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_pdb</span><span class="p">(</span><span class="n">pdb_code</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+  <span class="k">if</span> <span class="n">pdb_code</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">pdb_code</span> <span class="o">==</span> <span class="s2">""</span><span class="p">:</span>
+    <span class="n">upload_dict</span> <span class="o">=</span> <span class="n">files</span><span class="o">.</span><span class="n">upload</span><span class="p">()</span>
+    <span class="n">pdb_string</span> <span class="o">=</span> <span class="n">upload_dict</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">upload_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="mi">0</span><span class="p">]]</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">"tmp.pdb"</span><span class="p">,</span><span class="s2">"wb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">out</span><span class="p">:</span> <span class="n">out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">pdb_string</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s2">"tmp.pdb"</span>
+  <span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">pdb_code</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">pdb_code</span>
+  <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">pdb_code</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">pdb_code</span><span class="si">}</span><span class="s2">.pdb1"</span><span class="p">):</span>
+      <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s2">"wget -qnc https://files.rcsb.org/download/</span><span class="si">{</span><span class="n">pdb_code</span><span class="si">}</span><span class="s2">.pdb1.gz"</span><span class="p">)</span>
+      <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s2">"gunzip </span><span class="si">{</span><span class="n">pdb_code</span><span class="si">}</span><span class="s2">.pdb1.gz"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">pdb_code</span><span class="si">}</span><span class="s2">.pdb1"</span>
+  <span class="k">else</span><span class="p">:</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s2">"wget -qnc https://alphafold.ebi.ac.uk/files/AF-</span><span class="si">{</span><span class="n">pdb_code</span><span class="si">}</span><span class="s2">-F1-model_v3.pdb"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"AF-</span><span class="si">{</span><span class="n">pdb_code</span><span class="si">}</span><span class="s2">-F1-model_v3.pdb"</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">run_ananas</span><span class="p">(</span><span class="n">pdb_str</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">sym</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+  <span class="n">pdb_filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"outputs/</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">/ananas_input.pdb"</span>
+  <span class="n">out_filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"outputs/</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">/ananas.json"</span>
+  <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">pdb_filename</span><span class="p">,</span><span class="s2">"w"</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">:</span>
+    <span class="n">handle</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">pdb_str</span><span class="p">)</span>
+
+  <span class="n">cmd</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"./ananas </span><span class="si">{</span><span class="n">pdb_filename</span><span class="si">}</span><span class="s2"> -u -j </span><span class="si">{</span><span class="n">out_filename</span><span class="si">}</span><span class="s2">"</span>
+  <span class="k">if</span> <span class="n">sym</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+  <span class="k">else</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">cmd</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">sym</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+  <span class="c1"># parse results</span>
+  <span class="k">try</span><span class="p">:</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">out_filename</span><span class="p">,</span><span class="s2">"r"</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+    <span class="n">results</span><span class="p">,</span><span class="n">AU</span> <span class="o">=</span> <span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">out</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s2">"AU"</span><span class="p">]</span>
+    <span class="n">group</span> <span class="o">=</span> <span class="n">AU</span><span class="p">[</span><span class="s2">"group"</span><span class="p">]</span>
+    <span class="n">chains</span> <span class="o">=</span> <span class="n">AU</span><span class="p">[</span><span class="s2">"chain names"</span><span class="p">]</span>
+    <span class="n">rmsd</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s2">"Average_RMSD"</span><span class="p">]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"AnAnaS detected </span><span class="si">{</span><span class="n">group</span><span class="si">}</span><span class="s2"> symmetry at RMSD:</span><span class="si">{</span><span class="n">rmsd</span><span class="si">:</span><span class="s2">.3</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+    <span class="n">C</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s1">'transforms'</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s1">'CENTER'</span><span class="p">])</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="s2">"AXIS"</span><span class="p">])</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">results</span><span class="p">[</span><span class="s1">'transforms'</span><span class="p">]]</span>
+
+    <span class="c1"># apply symmetry and filter to the asymmetric unit</span>
+    <span class="n">new_lines</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">pdb_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">):</span>
+      <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"ATOM"</span><span class="p">):</span>
+        <span class="n">chain</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="mi">21</span><span class="p">:</span><span class="mi">22</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">chain</span> <span class="ow">in</span> <span class="n">chains</span><span class="p">:</span>
+          <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="n">i</span><span class="p">:(</span><span class="n">i</span><span class="o">+</span><span class="mi">8</span><span class="p">)])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">30</span><span class="p">,</span><span class="mi">38</span><span class="p">,</span><span class="mi">46</span><span class="p">]])</span>
+          <span class="k">if</span> <span class="n">group</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"c"</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">sym_it</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">C</span><span class="p">,</span><span class="n">A</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+          <span class="k">if</span> <span class="n">group</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"d"</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">sym_it</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">C</span><span class="p">,</span><span class="n">A</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">A</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+          <span class="n">coord_str</span> <span class="o">=</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">"</span><span class="si">{:8.3f}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">x</span><span class="p">])</span>
+          <span class="n">new_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">[:</span><span class="mi">30</span><span class="p">]</span><span class="o">+</span><span class="n">coord_str</span><span class="o">+</span><span class="n">line</span><span class="p">[</span><span class="mi">54</span><span class="p">:])</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">new_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">results</span><span class="p">,</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">new_lines</span><span class="p">)</span>
+
+  <span class="k">except</span><span class="p">:</span>
+    <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="n">pdb_str</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">steps</span><span class="p">,</span> <span class="n">num_designs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">visual</span><span class="o">=</span><span class="s2">"none"</span><span class="p">):</span>
+
+  <span class="k">def</span><span class="w"> </span><span class="nf">run_command_and_get_pid</span><span class="p">(</span><span class="n">command</span><span class="p">):</span>
+    <span class="n">pid_file</span> <span class="o">=</span> <span class="s1">'/dev/shm/pid'</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="sa">f</span><span class="s1">'nohup </span><span class="si">{</span><span class="n">command</span><span class="si">}</span><span class="s1"> &gt; /dev/null &amp; echo $! &gt; </span><span class="si">{</span><span class="n">pid_file</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">pid_file</span><span class="p">,</span> <span class="s1">'r'</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+      <span class="n">pid</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">pid_file</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pid</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">is_process_running</span><span class="p">(</span><span class="n">pid</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">os</span><span class="o">.</span><span class="n">kill</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+      <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="k">return</span> <span class="kc">True</span>
+
+  <span class="n">run_output</span> <span class="o">=</span> <span class="n">widgets</span><span class="o">.</span><span class="n">Output</span><span class="p">()</span>
+  <span class="n">progress</span> <span class="o">=</span> <span class="n">widgets</span><span class="o">.</span><span class="n">FloatProgress</span><span class="p">(</span><span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s1">'running'</span><span class="p">,</span> <span class="n">bar_style</span><span class="o">=</span><span class="s1">'info'</span><span class="p">)</span>
+  <span class="n">display</span><span class="p">(</span><span class="n">widgets</span><span class="o">.</span><span class="n">VBox</span><span class="p">([</span><span class="n">progress</span><span class="p">,</span> <span class="n">run_output</span><span class="p">]))</span>
+
+  <span class="c1"># clear previous run</span>
+  <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">steps</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="sa">f</span><span class="s2">"/dev/shm/</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2">.pdb"</span><span class="p">):</span>
+      <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="sa">f</span><span class="s2">"/dev/shm/</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2">.pdb"</span><span class="p">)</span>
+
+  <span class="n">pid</span> <span class="o">=</span> <span class="n">run_command_and_get_pid</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
+  <span class="k">try</span><span class="p">:</span>
+    <span class="n">fail</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_designs</span><span class="p">):</span>
+
+      <span class="c1"># for each step check if output generated</span>
+      <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">steps</span><span class="p">):</span>
+        <span class="n">wait</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">while</span> <span class="n">wait</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">fail</span><span class="p">:</span>
+          <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+          <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="sa">f</span><span class="s2">"/dev/shm/</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2">.pdb"</span><span class="p">):</span>
+            <span class="n">pdb_str</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">"/dev/shm/</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2">.pdb"</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">pdb_str</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">:]</span> <span class="o">==</span> <span class="s2">"TER"</span><span class="p">:</span>
+              <span class="n">wait</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="n">is_process_running</span><span class="p">(</span><span class="n">pid</span><span class="p">):</span>
+              <span class="n">fail</span> <span class="o">=</span> <span class="kc">True</span>
+          <span class="k">elif</span> <span class="ow">not</span> <span class="n">is_process_running</span><span class="p">(</span><span class="n">pid</span><span class="p">):</span>
+            <span class="n">fail</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="n">fail</span><span class="p">:</span>
+          <span class="n">progress</span><span class="o">.</span><span class="n">bar_style</span> <span class="o">=</span> <span class="s1">'danger'</span>
+          <span class="n">progress</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="s2">"failed"</span>
+          <span class="k">break</span>
+
+        <span class="k">else</span><span class="p">:</span>
+          <span class="n">progress</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="p">(</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">steps</span>
+          <span class="k">if</span> <span class="n">visual</span> <span class="o">!=</span> <span class="s2">"none"</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">run_output</span><span class="p">:</span>
+              <span class="n">run_output</span><span class="o">.</span><span class="n">clear_output</span><span class="p">(</span><span class="n">wait</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+              <span class="k">if</span> <span class="n">visual</span> <span class="o">==</span> <span class="s2">"image"</span><span class="p">:</span>
+                <span class="n">xyz</span><span class="p">,</span> <span class="n">bfact</span> <span class="o">=</span> <span class="n">get_ca</span><span class="p">(</span><span class="sa">f</span><span class="s2">"/dev/shm/</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2">.pdb"</span><span class="p">,</span> <span class="n">get_bfact</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+                <span class="n">fig</span><span class="o">.</span><span class="n">set_dpi</span><span class="p">(</span><span class="mi">100</span><span class="p">);</span><span class="n">fig</span><span class="o">.</span><span class="n">set_figwidth</span><span class="p">(</span><span class="mi">6</span><span class="p">);</span><span class="n">fig</span><span class="o">.</span><span class="n">set_figheight</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+                <span class="n">ax1</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">);</span><span class="n">ax1</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([]);</span><span class="n">ax1</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([])</span>
+                <span class="n">plot_pseudo_3D</span><span class="p">(</span><span class="n">xyz</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">bfact</span><span class="p">,</span> <span class="n">cmin</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">cmax</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax1</span><span class="p">)</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+              <span class="k">if</span> <span class="n">visual</span> <span class="o">==</span> <span class="s2">"interactive"</span><span class="p">:</span>
+                <span class="n">view</span> <span class="o">=</span> <span class="n">py3Dmol</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">js</span><span class="o">=</span><span class="s1">'https://3dmol.org/build/3Dmol.js'</span><span class="p">)</span>
+                <span class="n">view</span><span class="o">.</span><span class="n">addModel</span><span class="p">(</span><span class="n">pdb_str</span><span class="p">,</span><span class="s1">'pdb'</span><span class="p">)</span>
+                <span class="n">view</span><span class="o">.</span><span class="n">setStyle</span><span class="p">({</span><span class="s1">'cartoon'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'colorscheme'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'prop'</span><span class="p">:</span><span class="s1">'b'</span><span class="p">,</span><span class="s1">'gradient'</span><span class="p">:</span> <span class="s1">'roygb'</span><span class="p">,</span><span class="s1">'min'</span><span class="p">:</span><span class="mf">0.5</span><span class="p">,</span><span class="s1">'max'</span><span class="p">:</span><span class="mf">0.9</span><span class="p">}}})</span>
+                <span class="n">view</span><span class="o">.</span><span class="n">zoomTo</span><span class="p">()</span>
+                <span class="n">view</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="sa">f</span><span class="s2">"/dev/shm/</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2">.pdb"</span><span class="p">):</span>
+          <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="sa">f</span><span class="s2">"/dev/shm/</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2">.pdb"</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">fail</span><span class="p">:</span>
+        <span class="n">progress</span><span class="o">.</span><span class="n">bar_style</span> <span class="o">=</span> <span class="s1">'danger'</span>
+        <span class="n">progress</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="s2">"failed"</span>
+        <span class="k">break</span>
+
+    <span class="k">while</span> <span class="n">is_process_running</span><span class="p">(</span><span class="n">pid</span><span class="p">):</span>
+      <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+
+  <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">kill</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="n">signal</span><span class="o">.</span><span class="n">SIGTERM</span><span class="p">)</span>
+    <span class="n">progress</span><span class="o">.</span><span class="n">bar_style</span> <span class="o">=</span> <span class="s1">'danger'</span>
+    <span class="n">progress</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="s2">"stopped"</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">run_diffusion</span><span class="p">(</span><span class="n">contigs</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">pdb</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+                  <span class="n">symmetry</span><span class="o">=</span><span class="s2">"none"</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">hotspot</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                  <span class="n">chains</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">add_potential</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                  <span class="n">num_designs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">visual</span><span class="o">=</span><span class="s2">"none"</span><span class="p">):</span>
+
+  <span class="n">full_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"outputs/</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">"</span>
+  <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">full_path</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+  <span class="n">opts</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"inference.output_prefix=</span><span class="si">{</span><span class="n">full_path</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+          <span class="sa">f</span><span class="s2">"inference.num_designs=</span><span class="si">{</span><span class="n">num_designs</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span>
+
+  <span class="k">if</span> <span class="n">chains</span> <span class="o">==</span> <span class="s2">""</span><span class="p">:</span> <span class="n">chains</span> <span class="o">=</span> <span class="kc">None</span>
+
+  <span class="c1"># determine symmetry type</span>
+  <span class="k">if</span> <span class="n">symmetry</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"auto"</span><span class="p">,</span><span class="s2">"cyclic"</span><span class="p">,</span><span class="s2">"dihedral"</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="n">symmetry</span> <span class="o">==</span> <span class="s2">"auto"</span><span class="p">:</span>
+      <span class="n">sym</span><span class="p">,</span> <span class="n">copies</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">sym</span><span class="p">,</span> <span class="n">copies</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"cyclic"</span><span class="p">:(</span><span class="sa">f</span><span class="s2">"c</span><span class="si">{</span><span class="n">order</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span><span class="n">order</span><span class="p">),</span>
+                     <span class="s2">"dihedral"</span><span class="p">:(</span><span class="sa">f</span><span class="s2">"d</span><span class="si">{</span><span class="n">order</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span><span class="n">order</span><span class="o">*</span><span class="mi">2</span><span class="p">)}[</span><span class="n">symmetry</span><span class="p">]</span>
+  <span class="k">else</span><span class="p">:</span>
+    <span class="n">symmetry</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">sym</span><span class="p">,</span> <span class="n">copies</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="mi">1</span>
+
+  <span class="c1"># determine mode</span>
+  <span class="n">contigs</span> <span class="o">=</span> <span class="n">contigs</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">","</span><span class="p">,</span><span class="s2">" "</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">":"</span><span class="p">,</span><span class="s2">" "</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+  <span class="n">is_fixed</span><span class="p">,</span> <span class="n">is_free</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span>
+  <span class="n">fixed_chains</span> <span class="o">=</span> <span class="p">[]</span>
+  <span class="k">for</span> <span class="n">contig</span> <span class="ow">in</span> <span class="n">contigs</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">contig</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"/"</span><span class="p">):</span>
+      <span class="n">a</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"-"</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+      <span class="k">if</span> <span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">isalpha</span><span class="p">():</span>
+        <span class="n">is_fixed</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">fixed_chains</span><span class="p">:</span>
+          <span class="n">fixed_chains</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+      <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">isnumeric</span><span class="p">():</span>
+        <span class="n">is_free</span> <span class="o">=</span> <span class="kc">True</span>
+  <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">contigs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">is_free</span><span class="p">:</span>
+    <span class="n">mode</span> <span class="o">=</span> <span class="s2">"partial"</span>
+  <span class="k">elif</span> <span class="n">is_fixed</span><span class="p">:</span>
+    <span class="n">mode</span> <span class="o">=</span> <span class="s2">"fixed"</span>
+  <span class="k">else</span><span class="p">:</span>
+    <span class="n">mode</span> <span class="o">=</span> <span class="s2">"free"</span>
+
+  <span class="c1"># fix input contigs</span>
+  <span class="k">if</span> <span class="n">mode</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"partial"</span><span class="p">,</span><span class="s2">"fixed"</span><span class="p">]:</span>
+    <span class="n">pdb_str</span> <span class="o">=</span> <span class="n">pdb_to_string</span><span class="p">(</span><span class="n">get_pdb</span><span class="p">(</span><span class="n">pdb</span><span class="p">),</span> <span class="n">chains</span><span class="o">=</span><span class="n">chains</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">symmetry</span> <span class="o">==</span> <span class="s2">"auto"</span><span class="p">:</span>
+      <span class="n">a</span><span class="p">,</span> <span class="n">pdb_str</span> <span class="o">=</span> <span class="n">run_ananas</span><span class="p">(</span><span class="n">pdb_str</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">a</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'ERROR: no symmetry detected'</span><span class="p">)</span>
+        <span class="n">symmetry</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">sym</span><span class="p">,</span> <span class="n">copies</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="mi">1</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">a</span><span class="p">[</span><span class="s2">"group"</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"c"</span><span class="p">:</span>
+          <span class="n">symmetry</span> <span class="o">=</span> <span class="s2">"cyclic"</span>
+          <span class="n">sym</span><span class="p">,</span> <span class="n">copies</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="s2">"group"</span><span class="p">],</span> <span class="nb">int</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="s2">"group"</span><span class="p">][</span><span class="mi">1</span><span class="p">:])</span>
+        <span class="k">elif</span> <span class="n">a</span><span class="p">[</span><span class="s2">"group"</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"d"</span><span class="p">:</span>
+          <span class="n">symmetry</span> <span class="o">=</span> <span class="s2">"dihedral"</span>
+          <span class="n">sym</span><span class="p">,</span> <span class="n">copies</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="s2">"group"</span><span class="p">],</span> <span class="mi">2</span> <span class="o">*</span> <span class="nb">int</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="s2">"group"</span><span class="p">][</span><span class="mi">1</span><span class="p">:])</span>
+        <span class="k">else</span><span class="p">:</span>
+          <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'ERROR: the detected symmetry (</span><span class="si">{</span><span class="n">a</span><span class="p">[</span><span class="s2">"group"</span><span class="p">]</span><span class="si">}</span><span class="s1">) not currently supported'</span><span class="p">)</span>
+          <span class="n">symmetry</span> <span class="o">=</span> <span class="kc">None</span>
+          <span class="n">sym</span><span class="p">,</span> <span class="n">copies</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="mi">1</span>
+
+    <span class="k">elif</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">"fixed"</span><span class="p">:</span>
+      <span class="n">pdb_str</span> <span class="o">=</span> <span class="n">pdb_to_string</span><span class="p">(</span><span class="n">pdb_str</span><span class="p">,</span> <span class="n">chains</span><span class="o">=</span><span class="n">fixed_chains</span><span class="p">)</span>
+
+    <span class="n">pdb_filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">full_path</span><span class="si">}</span><span class="s2">/input.pdb"</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">pdb_filename</span><span class="p">,</span> <span class="s2">"w"</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">:</span>
+      <span class="n">handle</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">pdb_str</span><span class="p">)</span>
+
+    <span class="n">parsed_pdb</span> <span class="o">=</span> <span class="n">parse_pdb</span><span class="p">(</span><span class="n">pdb_filename</span><span class="p">)</span>
+    <span class="n">opts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"inference.input_pdb=</span><span class="si">{</span><span class="n">pdb_filename</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">mode</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"partial"</span><span class="p">]:</span>
+      <span class="n">iterations</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">80</span> <span class="o">*</span> <span class="p">(</span><span class="n">iterations</span> <span class="o">/</span> <span class="mi">200</span><span class="p">))</span>
+      <span class="n">opts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"diffuser.partial_T=</span><span class="si">{</span><span class="n">iterations</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+      <span class="n">contigs</span> <span class="o">=</span> <span class="n">fix_partial_contigs</span><span class="p">(</span><span class="n">contigs</span><span class="p">,</span> <span class="n">parsed_pdb</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">opts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"diffuser.T=</span><span class="si">{</span><span class="n">iterations</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+      <span class="n">contigs</span> <span class="o">=</span> <span class="n">fix_contigs</span><span class="p">(</span><span class="n">contigs</span><span class="p">,</span> <span class="n">parsed_pdb</span><span class="p">)</span>
+  <span class="k">else</span><span class="p">:</span>
+    <span class="n">opts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"diffuser.T=</span><span class="si">{</span><span class="n">iterations</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">parsed_pdb</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">contigs</span> <span class="o">=</span> <span class="n">fix_contigs</span><span class="p">(</span><span class="n">contigs</span><span class="p">,</span> <span class="n">parsed_pdb</span><span class="p">)</span>
+
+  <span class="k">if</span> <span class="n">hotspot</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">hotspot</span> <span class="o">!=</span> <span class="s2">""</span><span class="p">:</span>
+    <span class="n">opts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"ppi.hotspot_res=[</span><span class="si">{</span><span class="n">hotspot</span><span class="si">}</span><span class="s2">]"</span><span class="p">)</span>
+
+  <span class="c1"># setup symmetry</span>
+  <span class="k">if</span> <span class="n">sym</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">sym_opts</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"--config-name symmetry"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"inference.symmetry=</span><span class="si">{</span><span class="n">sym</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">add_potential</span><span class="p">:</span>
+      <span class="n">sym_opts</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"'potentials.guiding_potentials=[</span><span class="se">\"</span><span class="s2">type:olig_contacts,weight_intra:1,weight_inter:0.1</span><span class="se">\"</span><span class="s2">]'"</span><span class="p">,</span>
+                   <span class="s2">"potentials.olig_intra_all=True"</span><span class="p">,</span><span class="s2">"potentials.olig_inter_all=True"</span><span class="p">,</span>
+                   <span class="s2">"potentials.guide_scale=2"</span><span class="p">,</span><span class="s2">"potentials.guide_decay=quadratic"</span><span class="p">]</span>
+    <span class="n">opts</span> <span class="o">=</span> <span class="n">sym_opts</span> <span class="o">+</span> <span class="n">opts</span>
+    <span class="n">contigs</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">contigs</span><span class="p">]</span> <span class="o">*</span> <span class="n">copies</span><span class="p">,[])</span>
+
+  <span class="n">opts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"'contigmap.contigs=[</span><span class="si">{</span><span class="s1">' '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">contigs</span><span class="p">)</span><span class="si">}</span><span class="s2">]'"</span><span class="p">)</span>
+  <span class="n">opts</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">"inference.dump_pdb=True"</span><span class="p">,</span><span class="s2">"inference.dump_pdb_path='/dev/shm'"</span><span class="p">]</span>
+
+  <span class="nb">print</span><span class="p">(</span><span class="s2">"mode:"</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span>
+  <span class="nb">print</span><span class="p">(</span><span class="s2">"output:"</span><span class="p">,</span> <span class="n">full_path</span><span class="p">)</span>
+  <span class="nb">print</span><span class="p">(</span><span class="s2">"contigs:"</span><span class="p">,</span> <span class="n">contigs</span><span class="p">)</span>
+
+  <span class="n">opts_str</span> <span class="o">=</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">opts</span><span class="p">)</span>
+  <span class="n">cmd</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"./RFdiffusion/run_inference.py </span><span class="si">{</span><span class="n">opts_str</span><span class="si">}</span><span class="s2">"</span>
+  <span class="nb">print</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+
+  <span class="c1"># RUN</span>
+  <span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">iterations</span><span class="p">,</span> <span class="n">num_designs</span><span class="p">,</span> <span class="n">visual</span><span class="o">=</span><span class="n">visual</span><span class="p">)</span>
+
+  <span class="c1"># fix pdbs</span>
+  <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_designs</span><span class="p">):</span>
+    <span class="n">pdbs</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"outputs/traj/</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2">_pX0_traj.pdb"</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"outputs/traj/</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2">_Xt-1_traj.pdb"</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">full_path</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2">.pdb"</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">pdb</span> <span class="ow">in</span> <span class="n">pdbs</span><span class="p">:</span>
+      <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">pdb</span><span class="p">,</span><span class="s2">"r"</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">:</span> <span class="n">pdb_str</span> <span class="o">=</span> <span class="n">handle</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+      <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">pdb</span><span class="p">,</span><span class="s2">"w"</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">:</span> <span class="n">handle</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">fix_pdb</span><span class="p">(</span><span class="n">pdb_str</span><span class="p">,</span> <span class="n">contigs</span><span class="p">))</span>
+
+  <span class="k">return</span> <span class="n">contigs</span><span class="p">,</span> <span class="n">copies</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-python"><pre><span></span><span class="o">%%</span><span class="n">time</span>
+<span class="c1">#@title run **RFdiffusion** to generate a backbone</span>
+<span class="n">name</span> <span class="o">=</span> <span class="s2">"test"</span> <span class="c1">#@param {type:"string"}</span>
+<span class="n">contigs</span> <span class="o">=</span> <span class="s2">"100"</span> <span class="c1">#@param {type:"string"}</span>
+<span class="n">pdb</span> <span class="o">=</span> <span class="s2">""</span> <span class="c1">#@param {type:"string"}</span>
+<span class="n">iterations</span> <span class="o">=</span> <span class="mi">50</span> <span class="c1">#@param ["25", "50", "100", "150", "200"] {type:"raw"}</span>
+<span class="n">hotspot</span> <span class="o">=</span> <span class="s2">""</span> <span class="c1">#@param {type:"string"}</span>
+<span class="n">num_designs</span> <span class="o">=</span> <span class="mi">1</span> <span class="c1">#@param ["1", "2", "4", "8", "16", "32"] {type:"raw"}</span>
+<span class="n">visual</span> <span class="o">=</span> <span class="s2">"image"</span> <span class="c1">#@param ["none", "image", "interactive"]</span>
+<span class="c1">#@markdown ---</span>
+<span class="c1">#@markdown **symmetry** settings</span>
+<span class="c1">#@markdown ---</span>
+<span class="n">symmetry</span> <span class="o">=</span> <span class="s2">"none"</span> <span class="c1">#@param ["none", "auto", "cyclic", "dihedral"]</span>
+<span class="n">order</span> <span class="o">=</span> <span class="mi">1</span> <span class="c1">#@param ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"] {type:"raw"}</span>
+<span class="n">chains</span> <span class="o">=</span> <span class="s2">""</span> <span class="c1">#@param {type:"string"}</span>
+<span class="n">add_potential</span> <span class="o">=</span> <span class="kc">True</span> <span class="c1">#@param {type:"boolean"}</span>
+<span class="c1">#@markdown - `symmetry='auto'` enables automatic symmetry dectection with [AnAnaS](https://team.inria.fr/nano-d/software/ananas/).</span>
+<span class="c1">#@markdown - `chains="A,B"` filter PDB input to these chains (may help auto-symm detector)</span>
+<span class="c1">#@markdown - `add_potential` to discourage clashes between chains</span>
+
+<span class="c1"># determine where to save</span>
+<span class="n">path</span> <span class="o">=</span> <span class="n">name</span>
+<span class="k">while</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="sa">f</span><span class="s2">"outputs/</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">_0.pdb"</span><span class="p">):</span>
+  <span class="n">path</span> <span class="o">=</span> <span class="n">name</span> <span class="o">+</span> <span class="s2">"_"</span> <span class="o">+</span> <span class="s1">''</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">choices</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">ascii_lowercase</span> <span class="o">+</span> <span class="n">string</span><span class="o">.</span><span class="n">digits</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">5</span><span class="p">))</span>
+
+<span class="n">flags</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"contigs"</span><span class="p">:</span><span class="n">contigs</span><span class="p">,</span>
+         <span class="s2">"pdb"</span><span class="p">:</span><span class="n">pdb</span><span class="p">,</span>
+         <span class="s2">"order"</span><span class="p">:</span><span class="n">order</span><span class="p">,</span>
+         <span class="s2">"iterations"</span><span class="p">:</span><span class="n">iterations</span><span class="p">,</span>
+         <span class="s2">"symmetry"</span><span class="p">:</span><span class="n">symmetry</span><span class="p">,</span>
+         <span class="s2">"hotspot"</span><span class="p">:</span><span class="n">hotspot</span><span class="p">,</span>
+         <span class="s2">"path"</span><span class="p">:</span><span class="n">path</span><span class="p">,</span>
+         <span class="s2">"chains"</span><span class="p">:</span><span class="n">chains</span><span class="p">,</span>
+         <span class="s2">"add_potential"</span><span class="p">:</span><span class="n">add_potential</span><span class="p">,</span>
+         <span class="s2">"num_designs"</span><span class="p">:</span><span class="n">num_designs</span><span class="p">,</span>
+         <span class="s2">"visual"</span><span class="p">:</span><span class="n">visual</span><span class="p">}</span>
+
+<span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">flags</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+  <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="nb">str</span><span class="p">):</span>
+    <span class="n">flags</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"'"</span><span class="p">,</span><span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">'"'</span><span class="p">,</span><span class="s1">''</span><span class="p">)</span>
+
+<span class="n">contigs</span><span class="p">,</span> <span class="n">copies</span> <span class="o">=</span> <span class="n">run_diffusion</span><span class="p">(</span><span class="o">**</span><span class="n">flags</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-python"><pre><span></span><span class="c1">#@title Display 3D structure {run: "auto"}</span>
+<span class="n">animate</span> <span class="o">=</span> <span class="s2">"none"</span> <span class="c1">#@param ["none", "movie", "interactive"]</span>
+<span class="n">color</span> <span class="o">=</span> <span class="s2">"chain"</span> <span class="c1">#@param ["rainbow", "chain", "plddt"]</span>
+<span class="n">denoise</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">dpi</span> <span class="o">=</span> <span class="mi">100</span> <span class="c1">#@param ["100", "200", "400"] {type:"raw"}</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">colabdesign.shared.plot</span><span class="w"> </span><span class="kn">import</span> <span class="n">pymol_color_list</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">colabdesign.rf.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_ca</span><span class="p">,</span> <span class="n">get_Ls</span><span class="p">,</span> <span class="n">make_animation</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">string</span><span class="w"> </span><span class="kn">import</span> <span class="n">ascii_uppercase</span><span class="p">,</span><span class="n">ascii_lowercase</span>
+<span class="n">alphabet_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">ascii_uppercase</span><span class="o">+</span><span class="n">ascii_lowercase</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_pdb</span><span class="p">(</span><span class="n">num</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+  <span class="k">if</span> <span class="n">denoise</span><span class="p">:</span>
+    <span class="n">pdb_traj</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"outputs/traj/</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">num</span><span class="si">}</span><span class="s2">_pX0_traj.pdb"</span>
+  <span class="k">else</span><span class="p">:</span>
+    <span class="n">pdb_traj</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"outputs/traj/</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">num</span><span class="si">}</span><span class="s2">_Xt-1_traj.pdb"</span>
+  <span class="k">if</span> <span class="n">animate</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"none"</span><span class="p">,</span><span class="s2">"interactive"</span><span class="p">]:</span>
+    <span class="n">hbondCutoff</span> <span class="o">=</span> <span class="mf">4.0</span>
+    <span class="n">view</span> <span class="o">=</span> <span class="n">py3Dmol</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">js</span><span class="o">=</span><span class="s1">'https://3dmol.org/build/3Dmol.js'</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">animate</span> <span class="o">==</span> <span class="s2">"interactive"</span><span class="p">:</span>
+      <span class="n">pdb_str</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">pdb_traj</span><span class="p">,</span><span class="s1">'r'</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+      <span class="n">view</span><span class="o">.</span><span class="n">addModelsAsFrames</span><span class="p">(</span><span class="n">pdb_str</span><span class="p">,</span><span class="s1">'pdb'</span><span class="p">,{</span><span class="s1">'hbondCutoff'</span><span class="p">:</span><span class="n">hbondCutoff</span><span class="p">})</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">pdb</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"outputs/</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">num</span><span class="si">}</span><span class="s2">.pdb"</span>
+      <span class="n">pdb_str</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">pdb</span><span class="p">,</span><span class="s1">'r'</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+      <span class="n">view</span><span class="o">.</span><span class="n">addModel</span><span class="p">(</span><span class="n">pdb_str</span><span class="p">,</span><span class="s1">'pdb'</span><span class="p">,{</span><span class="s1">'hbondCutoff'</span><span class="p">:</span><span class="n">hbondCutoff</span><span class="p">})</span>
+    <span class="k">if</span> <span class="n">color</span> <span class="o">==</span> <span class="s2">"rainbow"</span><span class="p">:</span>
+      <span class="n">view</span><span class="o">.</span><span class="n">setStyle</span><span class="p">({</span><span class="s1">'cartoon'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'color'</span><span class="p">:</span><span class="s1">'spectrum'</span><span class="p">}})</span>
+    <span class="k">elif</span> <span class="n">color</span> <span class="o">==</span> <span class="s2">"chain"</span><span class="p">:</span>
+      <span class="k">for</span> <span class="n">n</span><span class="p">,</span><span class="n">chain</span><span class="p">,</span><span class="n">c</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">contigs</span><span class="p">)),</span>
+                              <span class="n">alphabet_list</span><span class="p">,</span>
+                              <span class="n">pymol_color_list</span><span class="p">):</span>
+          <span class="n">view</span><span class="o">.</span><span class="n">setStyle</span><span class="p">({</span><span class="s1">'chain'</span><span class="p">:</span><span class="n">chain</span><span class="p">},{</span><span class="s1">'cartoon'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'color'</span><span class="p">:</span><span class="n">c</span><span class="p">}})</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">view</span><span class="o">.</span><span class="n">setStyle</span><span class="p">({</span><span class="s1">'cartoon'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'colorscheme'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'prop'</span><span class="p">:</span><span class="s1">'b'</span><span class="p">,</span><span class="s1">'gradient'</span><span class="p">:</span> <span class="s1">'roygb'</span><span class="p">,</span><span class="s1">'min'</span><span class="p">:</span><span class="mf">0.5</span><span class="p">,</span><span class="s1">'max'</span><span class="p">:</span><span class="mf">0.9</span><span class="p">}}})</span>
+    <span class="n">view</span><span class="o">.</span><span class="n">zoomTo</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">animate</span> <span class="o">==</span> <span class="s2">"interactive"</span><span class="p">:</span>
+      <span class="n">view</span><span class="o">.</span><span class="n">animate</span><span class="p">({</span><span class="s1">'loop'</span><span class="p">:</span> <span class="s1">'backAndForth'</span><span class="p">})</span>
+    <span class="n">view</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+  <span class="k">else</span><span class="p">:</span>
+    <span class="n">Ls</span> <span class="o">=</span> <span class="n">get_Ls</span><span class="p">(</span><span class="n">contigs</span><span class="p">)</span>
+    <span class="n">xyz</span><span class="p">,</span> <span class="n">bfact</span> <span class="o">=</span> <span class="n">get_ca</span><span class="p">(</span><span class="n">pdb_traj</span><span class="p">,</span> <span class="n">get_bfact</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">xyz</span> <span class="o">=</span> <span class="n">xyz</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="nb">sum</span><span class="p">(</span><span class="n">Ls</span><span class="p">),</span><span class="mi">3</span><span class="p">))[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">bfact</span> <span class="o">=</span> <span class="n">bfact</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="nb">sum</span><span class="p">(</span><span class="n">Ls</span><span class="p">)))[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">color</span> <span class="o">==</span> <span class="s2">"chain"</span><span class="p">:</span>
+      <span class="n">display</span><span class="p">(</span><span class="n">HTML</span><span class="p">(</span><span class="n">make_animation</span><span class="p">(</span><span class="n">xyz</span><span class="p">,</span> <span class="n">Ls</span><span class="o">=</span><span class="n">Ls</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="n">dpi</span><span class="p">,</span> <span class="n">ref</span><span class="o">=-</span><span class="mi">1</span><span class="p">)))</span>
+    <span class="k">elif</span> <span class="n">color</span> <span class="o">==</span> <span class="s2">"rainbow"</span><span class="p">:</span>
+      <span class="n">display</span><span class="p">(</span><span class="n">HTML</span><span class="p">(</span><span class="n">make_animation</span><span class="p">(</span><span class="n">xyz</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="n">dpi</span><span class="p">,</span> <span class="n">ref</span><span class="o">=-</span><span class="mi">1</span><span class="p">)))</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">display</span><span class="p">(</span><span class="n">HTML</span><span class="p">(</span><span class="n">make_animation</span><span class="p">(</span><span class="n">xyz</span><span class="p">,</span> <span class="n">plddt</span><span class="o">=</span><span class="n">bfact</span><span class="o">*</span><span class="mi">100</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="n">dpi</span><span class="p">,</span> <span class="n">ref</span><span class="o">=-</span><span class="mi">1</span><span class="p">)))</span>
+
+
+<span class="k">if</span> <span class="n">num_designs</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+  <span class="n">output</span> <span class="o">=</span> <span class="n">widgets</span><span class="o">.</span><span class="n">Output</span><span class="p">()</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">on_change</span><span class="p">(</span><span class="n">change</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">change</span><span class="p">[</span><span class="s1">'name'</span><span class="p">]</span> <span class="o">==</span> <span class="s1">'value'</span><span class="p">:</span>
+      <span class="k">with</span> <span class="n">output</span><span class="p">:</span>
+        <span class="n">output</span><span class="o">.</span><span class="n">clear_output</span><span class="p">(</span><span class="n">wait</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">plot_pdb</span><span class="p">(</span><span class="n">change</span><span class="p">[</span><span class="s1">'new'</span><span class="p">])</span>
+  <span class="n">dropdown</span> <span class="o">=</span> <span class="n">widgets</span><span class="o">.</span><span class="n">Dropdown</span><span class="p">(</span>
+      <span class="n">options</span><span class="o">=</span><span class="p">[(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1">'</span><span class="p">,</span><span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_designs</span><span class="p">)],</span>
+      <span class="n">value</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s1">'design:'</span><span class="p">,</span>
+  <span class="p">)</span>
+  <span class="n">dropdown</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="n">on_change</span><span class="p">)</span>
+  <span class="n">display</span><span class="p">(</span><span class="n">widgets</span><span class="o">.</span><span class="n">VBox</span><span class="p">([</span><span class="n">dropdown</span><span class="p">,</span> <span class="n">output</span><span class="p">]))</span>
+  <span class="k">with</span> <span class="n">output</span><span class="p">:</span>
+    <span class="n">plot_pdb</span><span class="p">(</span><span class="n">dropdown</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+  <span class="n">plot_pdb</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-python"><pre><span></span><span class="o">%%</span><span class="n">time</span>
+<span class="c1">#@title run **ProteinMPNN** to generate a sequence and **AlphaFold** to validate</span>
+<span class="n">num_seqs</span> <span class="o">=</span> <span class="mi">8</span> <span class="c1">#@param ["1", "2", "4", "8", "16", "32", "64"] {type:"raw"}</span>
+<span class="n">initial_guess</span> <span class="o">=</span> <span class="kc">False</span> <span class="c1">#@param {type:"boolean"}</span>
+<span class="n">num_recycles</span> <span class="o">=</span> <span class="mi">1</span> <span class="c1">#@param ["0", "1", "2", "3", "6", "12"] {type:"raw"}</span>
+<span class="n">use_multimer</span> <span class="o">=</span> <span class="kc">False</span> <span class="c1">#@param {type:"boolean"}</span>
+<span class="n">rm_aa</span> <span class="o">=</span> <span class="s2">"C"</span> <span class="c1">#@param {type:"string"}</span>
+<span class="n">mpnn_sampling_temp</span> <span class="o">=</span> <span class="mf">0.1</span> <span class="c1">#@param ["0.0001", "0.1", "0.15", "0.2", "0.25", "0.3", "0.5", "1.0"] {type:"raw"}</span>
+<span class="c1">#@markdown - for **binder** design, we recommend `initial_guess=True num_recycles=3`</span>
+
+<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="s2">"params/done.txt"</span><span class="p">):</span>
+  <span class="nb">print</span><span class="p">(</span><span class="s2">"downloading AlphaFold params..."</span><span class="p">)</span>
+  <span class="k">while</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="s2">"params/done.txt"</span><span class="p">):</span>
+    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+
+<span class="n">contigs_str</span> <span class="o">=</span> <span class="s2">":"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">contigs</span><span class="p">)</span>
+<span class="n">opts</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"--pdb=outputs/</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">_0.pdb"</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">"--loc=outputs/</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">"--contig=</span><span class="si">{</span><span class="n">contigs_str</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">"--copies=</span><span class="si">{</span><span class="n">copies</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">"--num_seqs=</span><span class="si">{</span><span class="n">num_seqs</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">"--num_recycles=</span><span class="si">{</span><span class="n">num_recycles</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">"--rm_aa=</span><span class="si">{</span><span class="n">rm_aa</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">"--mpnn_sampling_temp=</span><span class="si">{</span><span class="n">mpnn_sampling_temp</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">"--num_designs=</span><span class="si">{</span><span class="n">num_designs</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span>
+<span class="k">if</span> <span class="n">initial_guess</span><span class="p">:</span> <span class="n">opts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"--initial_guess"</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">use_multimer</span><span class="p">:</span> <span class="n">opts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"--use_multimer"</span><span class="p">)</span>
+<span class="n">opts</span> <span class="o">=</span> <span class="s1">' '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">opts</span><span class="p">)</span>
+<span class="err">!</span><span class="n">python</span> <span class="n">colabdesign</span><span class="o">/</span><span class="n">rf</span><span class="o">/</span><span class="n">designability_test</span><span class="o">.</span><span class="n">py</span> <span class="p">{</span><span class="n">opts</span><span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-python"><pre><span></span><span class="c1">#@title Display best result</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">py3Dmol</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">plot_pdb</span><span class="p">(</span><span class="n">num</span> <span class="o">=</span> <span class="s2">"best"</span><span class="p">):</span>
+  <span class="k">if</span> <span class="n">num</span> <span class="o">==</span> <span class="s2">"best"</span><span class="p">:</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">"outputs/</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">/best.pdb"</span><span class="p">,</span><span class="s2">"r"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+      <span class="c1"># REMARK 001 design {m} N {n} RMSD {rmsd}</span>
+      <span class="n">info</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">'</span><span class="se">\n</span><span class="s1">'</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+    <span class="n">num</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+  <span class="n">hbondCutoff</span> <span class="o">=</span> <span class="mf">4.0</span>
+  <span class="n">view</span> <span class="o">=</span> <span class="n">py3Dmol</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">js</span><span class="o">=</span><span class="s1">'https://3dmol.org/build/3Dmol.js'</span><span class="p">)</span>
+  <span class="n">pdb_str</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">"outputs/</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">num</span><span class="si">}</span><span class="s2">.pdb"</span><span class="p">,</span><span class="s1">'r'</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+  <span class="n">view</span><span class="o">.</span><span class="n">addModel</span><span class="p">(</span><span class="n">pdb_str</span><span class="p">,</span><span class="s1">'pdb'</span><span class="p">,{</span><span class="s1">'hbondCutoff'</span><span class="p">:</span><span class="n">hbondCutoff</span><span class="p">})</span>
+  <span class="n">pdb_str</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">"outputs/</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">/best_design</span><span class="si">{</span><span class="n">num</span><span class="si">}</span><span class="s2">.pdb"</span><span class="p">,</span><span class="s1">'r'</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+  <span class="n">view</span><span class="o">.</span><span class="n">addModel</span><span class="p">(</span><span class="n">pdb_str</span><span class="p">,</span><span class="s1">'pdb'</span><span class="p">,{</span><span class="s1">'hbondCutoff'</span><span class="p">:</span><span class="n">hbondCutoff</span><span class="p">})</span>
+
+  <span class="n">view</span><span class="o">.</span><span class="n">setStyle</span><span class="p">({</span><span class="s2">"model"</span><span class="p">:</span><span class="mi">0</span><span class="p">},{</span><span class="s1">'cartoon'</span><span class="p">:{}})</span> <span class="c1">#: {'colorscheme': {'prop':'b','gradient': 'roygb','min':0,'max':100}}})</span>
+  <span class="n">view</span><span class="o">.</span><span class="n">setStyle</span><span class="p">({</span><span class="s2">"model"</span><span class="p">:</span><span class="mi">1</span><span class="p">},{</span><span class="s1">'cartoon'</span><span class="p">:{</span><span class="s1">'colorscheme'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'prop'</span><span class="p">:</span><span class="s1">'b'</span><span class="p">,</span><span class="s1">'gradient'</span><span class="p">:</span> <span class="s1">'roygb'</span><span class="p">,</span><span class="s1">'min'</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span><span class="s1">'max'</span><span class="p">:</span><span class="mi">100</span><span class="p">}}})</span>
+  <span class="n">view</span><span class="o">.</span><span class="n">zoomTo</span><span class="p">()</span>
+  <span class="n">view</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="k">if</span> <span class="n">num_designs</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+  <span class="k">def</span><span class="w"> </span><span class="nf">on_change</span><span class="p">(</span><span class="n">change</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">change</span><span class="p">[</span><span class="s1">'name'</span><span class="p">]</span> <span class="o">==</span> <span class="s1">'value'</span><span class="p">:</span>
+      <span class="k">with</span> <span class="n">output</span><span class="p">:</span>
+        <span class="n">output</span><span class="o">.</span><span class="n">clear_output</span><span class="p">(</span><span class="n">wait</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">plot_pdb</span><span class="p">(</span><span class="n">change</span><span class="p">[</span><span class="s1">'new'</span><span class="p">])</span>
+  <span class="n">dropdown</span> <span class="o">=</span> <span class="n">widgets</span><span class="o">.</span><span class="n">Dropdown</span><span class="p">(</span>
+    <span class="n">options</span><span class="o">=</span><span class="p">[</span><span class="s2">"best"</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_designs</span><span class="p">)],</span>
+    <span class="n">value</span><span class="o">=</span><span class="s2">"best"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s1">'design:'</span><span class="p">,</span>
+  <span class="p">)</span>
+  <span class="n">dropdown</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="n">on_change</span><span class="p">)</span>
+  <span class="n">output</span> <span class="o">=</span> <span class="n">widgets</span><span class="o">.</span><span class="n">Output</span><span class="p">()</span>
+  <span class="n">display</span><span class="p">(</span><span class="n">widgets</span><span class="o">.</span><span class="n">VBox</span><span class="p">([</span><span class="n">dropdown</span><span class="p">,</span> <span class="n">output</span><span class="p">]))</span>
+  <span class="k">with</span> <span class="n">output</span><span class="p">:</span>
+    <span class="n">plot_pdb</span><span class="p">(</span><span class="n">dropdown</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+  <span class="n">plot_pdb</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-python"><pre><span></span><span class="c1">#@title Package and download results</span>
+<span class="c1">#@markdown If you are having issues downloading the result archive,</span>
+<span class="c1">#@markdown try disabling your adblocker and run this cell again.</span>
+<span class="c1">#@markdown  If that fails click on the little folder icon to the</span>
+<span class="c1">#@markdown  left, navigate to file: `name.result.zip`,</span>
+<span class="c1">#@markdown  right-click and select \"Download\"</span>
+<span class="c1">#@markdown (see [screenshot](https://pbs.twimg.com/media/E6wRW2lWUAEOuoe?format=jpg&amp;name=small)).</span>
+<span class="err">!</span><span class="nb">zip</span> <span class="o">-</span><span class="n">r</span> <span class="p">{</span><span class="n">path</span><span class="p">}</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">zip</span> <span class="n">outputs</span><span class="o">/</span><span class="p">{</span><span class="n">path</span><span class="p">}</span><span class="o">*</span> <span class="n">outputs</span><span class="o">/</span><span class="n">traj</span><span class="o">/</span><span class="p">{</span><span class="n">path</span><span class="p">}</span><span class="o">*</span>
+<span class="n">files</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">.result.zip"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
 </div>
 <div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h2 id="Instructions"><strong>Instructions</strong><a class="anchor-link" href="#Instructions">¶</a></h2><hr/>
 <p>Use <code>contigs</code> to define continious chains. Use a <code>:</code> to define multiple contigs and a <code>/</code> to define mutliple segments within a contig.
 For example:</p>
